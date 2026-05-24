@@ -1,0 +1,97 @@
+@startuml
+autonumber
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Khách hàng (Customer)" as Customer
+box "Presentation Layer" #LightYellow
+    participant "Mobile/Web UI" as UI
+end box
+
+box "API Layer" #LightCyan
+    participant "AppointmentController" as Controller
+end box
+
+box "Business Logic Layer" #LightGreen
+    participant "AppointmentService" as Service
+    participant "NotificationService" as NotifyService
+end box
+
+box "Data Access Layer" #LightPink
+    participant "AppointmentRepository" as AppRepo
+    participant "TechnicianRepository" as TechRepo
+    participant "Database" as DB
+end box
+
+actor "Thợ sửa (Technician)" as Tech
+
+' Luồng khởi tạo đặt lịch
+Customer -> UI : Chọn dịch vụ & bấm "Đặt lịch"
+activate UI
+UI -> Controller : POST /api/appointments (BookingRequest)
+activate Controller
+
+' Lưu lịch hẹn ban đầu
+Controller -> Service : CreateAppointment(bookingData)
+activate Service
+Service -> AppRepo : Save(newAppointment)
+activate AppRepo
+AppRepo -> DB : INSERT INTO Appointments
+activate DB
+DB --> AppRepo : Return AppointmentId (Status: Pending)
+deactivate DB
+AppRepo --> Service : Appointment Object
+deactivate AppRepo
+
+' Luồng tự động điều phối thợ
+Note over Service : Bắt đầu thuật toán\nTự động điều phối (Auto-Assign)
+Service -> TechRepo : GetAvailableTechnicians(skill, location)
+activate TechRepo
+TechRepo -> DB : SELECT Tech WHERE Status = 'Active' AND Skill = x
+activate DB
+DB --> TechRepo : List<Technician>
+deactivate DB
+TechRepo --> Service : List<Technician>
+deactivate TechRepo
+
+alt Tìm thấy thợ phù hợp
+    Note over Service : Chọn thợ tối ưu nhất\n(vd: dựa trên rating hoặc khoảng cách)
+    Service -> AppRepo : UpdateTechnician(appointmentId, techId, status: 'Assigned')
+    activate AppRepo
+    AppRepo -> DB : UPDATE Appointments SET TechId, Status
+    activate DB
+    DB --> AppRepo : Success
+    deactivate DB
+    AppRepo --> Service : Updated Appointment
+    deactivate AppRepo
+    
+    ' Thông báo cho cả 2 bên
+    Service -> NotifyService : SendAssignmentNotifications(appointmentId)
+    activate NotifyService
+    NotifyService -> Customer : Gửi Push Notification (Đã tìm thấy thợ)
+    NotifyService -> Tech : Gửi Push Notification (Có lịch hẹn mới)
+    NotifyService --> Service : Done
+    deactivate NotifyService
+else Không tìm thấy thợ trống
+    Service -> AppRepo : UpdateStatus(appointmentId, status: 'WaitingForAdmin')
+    activate AppRepo
+    AppRepo -> DB : UPDATE Appointments SET Status
+    activate DB
+    DB --> AppRepo : Success
+    deactivate DB
+    AppRepo --> Service : Updated Appointment
+    deactivate AppRepo
+    Service -> NotifyService : NotifyAdminNewRequest(appointmentId)
+    activate NotifyService
+    NotifyService --> Service : Done
+    deactivate NotifyService
+end
+
+Service --> Controller : BookingResponseDto
+deactivate Service
+Controller --> UI : 200 OK (BookingResult)
+deactivate Controller
+UI --> Customer : Hiển thị màn hình "Đặt lịch thành công"
+deactivate UI
+
+@enduml

@@ -1,0 +1,35 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Khách hàng (Customer)" as Customer
+actor "Thợ sửa (Technician)" as Tech
+actor "Quản trị viên (Admin)" as Admin
+
+rectangle "Hệ thống EVCare" {
+    ' Use cases cho Khách hàng
+    (Đăng ký / Đăng nhập) as UC_Login
+    (Đặt lịch dịch vụ) as UC_Book
+    (Xem lịch sử dịch vụ) as UC_History
+    
+    ' Use cases cho Thợ sửa
+    (Xem danh sách việc) as UC_ViewJobs
+    (Cập nhật trạng thái công việc) as UC_UpdateStatus
+    
+    ' Use cases cho Admin
+    (Quản lý tài khoản) as UC_ManageUsers
+    (Quản lý danh mục dịch vụ) as UC_ManageServices
+}
+
+Customer --> UC_Login
+Customer --> UC_Book
+Customer --> UC_History
+
+Tech --> UC_Login
+Tech --> UC_ViewJobs
+Tech --> UC_UpdateStatus
+
+Admin --> UC_Login
+Admin --> UC_ManageUsers
+Admin --> UC_ManageServices
+@enduml

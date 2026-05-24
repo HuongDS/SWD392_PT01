@@ -1,0 +1,63 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+' Abstract class hoặc Base class cho người dùng
+abstract class User {
+    + String id
+    + String fullName
+    + String phoneNumber
+    + String email
+    + String password
+    + login()
+    + logout()
+}
+
+class Customer {
+    + String address
+    + String membershipLevel
+    + viewHistory()
+}
+
+class Technician {
+    + String skillCategory
+    + String currentStatus
+    + double rating
+    + updateLocation()
+}
+
+class Admin {
+    + String roleLevel
+    + assignTask(appointmentId, techId)
+}
+
+class Appointment {
+    + String appointmentId
+    + DateTime scheduledTime
+    + String description
+    + String status
+    + double estimatedCost
+    + createAppointment()
+    + cancelAppointment()
+}
+
+class Invoice {
+    + String invoiceId
+    + DateTime issuedDate
+    + double totalAmount
+    + String paymentMethod
+    + String paymentStatus
+    + processPayment()
+    + generatePDF()
+}
+
+' Mối quan hệ kế thừa người dùng
+User <|-- Customer
+User <|-- Technician
+User <|-- Admin
+
+' Mối quan hệ giữa các thực thể chính
+Customer "1" *-- "0..*" Appointment : "đặt lịch"
+Technician "0..1" -- "0..*" Appointment : "được phân công"
+Appointment "1" *-- "1" Invoice : "xuất"
+
+@enduml

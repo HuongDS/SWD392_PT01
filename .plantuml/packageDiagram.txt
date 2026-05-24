@@ -1,0 +1,36 @@
+@startuml
+allowmixing
+
+package "EVCare.Presentation" as Presentation 
+' Gắn ghi chú vào Presentation package bằng alias
+note right of Presentation
+  Mobile/Web UI
+  (HTML/CSS/JS, Flutter/React)
+end note
+
+package "EVCare.API" as API {
+    package "Controllers" as Controller
+    package "DTOs" as DTOs
+}
+
+package "EVCare.Business" as Business {
+    package "Services" as Service
+    package "Interfaces" as BInterfaces
+}
+
+package "EVCare.DataAccess" as DataAccess {
+    package "Repositories" as Repository
+    package "Data" as DataContext
+}
+
+' Định nghĩa luồng phụ thuộc (Dependency)
+Presentation ..> Controller : "Gửi HTTP Request"
+Controller ..> DTOs : "Sử dụng"
+Controller ..> BInterfaces : "Gọi nghiệp vụ qua"
+
+Service ..> BInterfaces : "Hiện thực hóa"
+Service ..> Repository : "Truy vấn qua"
+
+Repository ..> DataContext : "Sử dụng DbContext"
+
+@enduml
