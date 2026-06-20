@@ -1,6 +1,6 @@
 [
   {
-    "feature_name": "Quản lý Đặt lịch hẹn",
+    "business_name": "Quản lý Đặt lịch hẹn",
     "apis": [
       {
         "controller": "AppointmentController",
